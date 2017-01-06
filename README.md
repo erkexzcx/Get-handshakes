@@ -1,5 +1,10 @@
 gethandshakes.sh
 ================
+Description:
+-----------
+This is a script, which is used to automaticall collect handshakes (\*.hccap files) from all around discovered WiFis. Script automatically detects all available wlan interfaces and will ask you step by step what would you like to do.
+
+Script was primarily tested and designed to work on Arch and Kali Linux distributions, but I believe it should work in any Linux distribution.
 
 Requirements:
 ------------
