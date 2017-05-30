@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# Author & maintainer: Erikas Rudinskas <erikmnkl@gmail.com>
 
 function startServices() {
 	if [[ "$MANUALMONITORINGMODE" -ne 1 ]]; then
@@ -23,6 +25,7 @@ checkDependencies(){
 	type aircrack-ng >/dev/null 2>&1 || { echo -e >&2 "'aircrack-ng' package is required but is not installed. Aborting..."; exit 1; }
 	type ifconfig >/dev/null 2>&1 || { echo -e >&2 "'net-tools' package is required but is not installed. Aborting..."; exit 1; }
 	type xterm >/dev/null 2>&1 || { echo -e >&2 "'xterm' package is required but is not installed. Aborting..."; exit 1; }
+	type cap2hccapx >/dev/null 2>&1 || { echo -e >&2 "'hashcat-utils' package is required but is not installed. Aborting..."; exit 1; }
 }
 
 stopNetworkManager(){
@@ -175,16 +178,19 @@ while read line; do
 done < macList.txt
 echo
 
-# Convert *.cap files to *.hccap:
-echo "Converting *.cap files to *.hccap..."
+# Convert *.cap files to *.hccapx:
+echo "Converting *.cap files to *.hccapx..."
 for handshake in handshake_*.cap; do
 	FILENAME=${handshake%.*}
-	aircrack-ng -J $FILENAME $handshake > /dev/null
-	rm -f $handshake
+	AMOUNTOFHCCAPX=`cap2hccapx "$FILENAME.cap" "$FILENAME.hccapx" | grep Written | grep "WPA Handshakes to: " | awk '{ print $2 }'`
+	# If ho handshake was recorded - delete all files
+	if [ "$AMOUNTOFHCCAPX" -eq "0" ]; then
+		rm -f "$FILENAME".*
+	fi
 done
 
-# List available HCCAP files and MACs for whom handshakes were collected + ask to merge handshakes:
-HCCAPTEST=`ls handshake*.hccap 2>/dev/null`
+# List available HCCAPX files and MACs for whom handshakes were collected + ask to merge handshakes:
+HCCAPTEST=`ls handshake*.hccapx 2>/dev/null`
 if [[ "$HCCAPTEST" ]]; then
 	echo
 	echo "The only handshakes that were collected:"
@@ -192,21 +198,21 @@ if [[ "$HCCAPTEST" ]]; then
 	unset options i
 	while IFS= read -r -d $'\n' f; do
 		options[i++]="$f"
-	done < <(ls -1 handshake_*.hccap 2>/dev/null)
+	done < <(ls -1 handshake_*.hccapx 2>/dev/null)
 	for opt in "${options[@]}"; do
-		a=${opt%-*.hccap}
+		a=${opt%-*.hccapx}
 		b=${opt#handshake_}
 		printf "\t$b\n"
 	done
 	echo "----------------------------------------------"
 	echo
-	MACCOUNT=`ls -1 handshake_*.hccap 2>/dev/null | wc -l`
+	MACCOUNT=`ls -1 handshake_*.hccapx 2>/dev/null | wc -l`
 	if [[ "$MACCOUNT" > 1 ]]; then
-		read -p "Do you want single (merged) HCCAP file for all handshakes? (Y/N) "
+		read -p "Do you want single (merged) HCCAPX file for all handshakes? (Y/N) "
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			cat *.hccap > merged
-			rm -f *.hccap
-			mv merged handshakes.hccap
+			cat *.hccapx > merged
+			rm -f *.hccapx
+			mv merged handshakes.hccapx
 		fi
 	fi
 else
