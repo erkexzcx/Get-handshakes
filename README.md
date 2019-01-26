@@ -1,5 +1,8 @@
 gethandshakes.sh
 ================
+
+__NOTE: This script is very old and might not work anymore. The code is actually a mess, hard to read and hard to understand, because at the time of writting it I did not know much about bash scripting.__
+
 Description:
 -----------
 This is a script, which is used to automaticall collect handshakes (\*.hccap files) from all around discovered WiFis. Script automatically detects all available wlan interfaces and will ask you step by step what would you like to do.
